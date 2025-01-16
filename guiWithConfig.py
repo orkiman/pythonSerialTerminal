@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import messagebox
 import serial.tools.list_ports
+from serial.tools import list_ports
+
 import asyncio
 import serial_asyncio
 import configparser
@@ -90,6 +92,43 @@ class SerialReaderApp:
         self.root.after(100, self.run_asyncio)
 
     async def read_serial(self):
+        try:
+            self.reader, self.protocol = await serial_asyncio.open_serial_connection(
+                url=self.port_var.get(), baudrate=int(self.baudrate_var.get())
+            )
+            while self.running:
+                # Read all available bytes
+                data = await self.reader.read(1024)  # Adjust the buffer size as needed
+                if data:
+                    hex_line = ' '.join(f'{i:02x}' for i in data)
+                    at_bottom = self.scrollbar.get()[1] == 1.0
+
+                    # Insert hex representation
+                    self.hex_text.insert(tk.END, hex_line + "\n")
+                    if at_bottom:
+                        self.hex_text.see(tk.END)
+
+                    # Try to decode the data
+                    try:
+                        decoded_data = data.decode().strip()
+                    except UnicodeDecodeError:
+                        decoded_data = None
+
+                    if decoded_data:
+                        # Display decoded text
+                        self.text.insert(tk.END, decoded_data + "\n")
+                        if at_bottom:
+                            self.text.see(tk.END)
+                    else:
+                        print(f"Received raw data: {data}")
+        except asyncio.CancelledError:
+            pass
+        except Exception as e:
+            print(f"Error reading serial port: {e}")
+            
+
+    
+    async def old_read_serial(self):
         try:
             self.reader, self.protocol = await serial_asyncio.open_serial_connection(
                 url=self.port_var.get(), baudrate=int(self.baudrate_var.get()))
