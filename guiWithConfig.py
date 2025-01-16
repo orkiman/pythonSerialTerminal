@@ -18,6 +18,8 @@ class SerialReaderApp:
 
         self.cr_var = tk.IntVar()
         self.lf_var = tk.IntVar()
+        
+        self.send_checkbox_var = tk.BooleanVar()
 
         self.load_config()
 
@@ -68,14 +70,21 @@ class SerialReaderApp:
         self.input_entry = tk.Entry(self.entry_frame)
         self.input_entry.bind("<Return>", self.send_data)
         self.input_entry.pack(side="left")
+        
+
+        # keep Sent data checkbox
+        
+        self.send_checkbox = tk.Checkbutton(root, text="Keep sent data", variable=self.send_checkbox_var)
+        self.send_checkbox.pack()
+
 
         self.send_button = tk.Button(self.entry_frame, text="Send", command=self.send_data)
         self.send_button.pack(side="left")
 
-        self.cr_cb = tk.Checkbutton(root, text="CR", variable=self.cr_var)
+        self.cr_cb = tk.Checkbutton(root, text="CR (\\r)", variable=self.cr_var)
         self.cr_cb.pack(side="left")
 
-        self.lf_cb = tk.Checkbutton(root, text="LF", variable=self.lf_var)
+        self.lf_cb = tk.Checkbutton(root, text="LF (\\n)", variable=self.lf_var)
         self.lf_cb.pack(side="left")
 
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
@@ -179,7 +188,8 @@ class SerialReaderApp:
                 data += '\n'
         if self.protocol and data:
             self.protocol.write(data.encode())
-            self.input_entry.delete(0, tk.END)
+            if not self.send_checkbox_var.get():
+                self.input_entry.delete(0, tk.END)
 
     async def close_serial(self):
         self.running = False
@@ -202,7 +212,8 @@ class SerialReaderApp:
         config['DEFAULT'] = {'port': self.port_var.get(),
                              'baudrate': self.baudrate_var.get(),
                              'cr': self.cr_var.get(),
-                             'lf': self.lf_var.get()}
+                             'lf': self.lf_var.get(),
+                             'keep_sent_data': self.send_checkbox_var.get()}
         with open('config.ini', 'w') as configfile:
             config.write(configfile)
 
@@ -213,6 +224,8 @@ class SerialReaderApp:
         self.baudrate = config.get('DEFAULT', 'baudrate', fallback=None)
         self.cr_var.set(int(config.get('DEFAULT', 'cr', fallback=0)))
         self.lf_var.set(int(config.get('DEFAULT', 'lf', fallback=0)))
+        self.send_checkbox_var.set(config.getboolean('DEFAULT', 'keep_sent_data', fallback=False))
+
 
 
 if __name__ == "__main__":
