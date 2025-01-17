@@ -68,7 +68,11 @@ class SerialReaderApp:
         self.entry_frame.pack()
 
         self.input_entry = tk.Entry(self.entry_frame)
-        self.input_entry.bind("<Return>", self.send_data)
+        # self.input_entry.bind("<Return>", self.send_data)
+        self.input_entry.bind("<Return>", self.send_data_event)
+        self.input_entry.bind("<KP_Enter>", self.send_data_event)  # Explicitly bind numpad Enter
+
+
         self.input_entry.pack(side="left")
         
 
@@ -178,6 +182,9 @@ class SerialReaderApp:
                 self.protocol.transport.close()
         self.running = True
         self.serial_task = self.serial_loop.create_task(self.read_serial())
+
+    def send_data_event(self, event):
+        self.send_data()
 
     def send_data(self, *args):
         data = self.input_entry.get()
