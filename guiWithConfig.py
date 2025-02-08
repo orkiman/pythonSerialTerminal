@@ -11,6 +11,7 @@ class SerialReaderApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Serial Reader")
+        self.root.configure(bg="lightblue")  # Set background color of the main window
         self.serial_loop = asyncio.get_event_loop()
         self.reader = None
         self.protocol = None
@@ -32,17 +33,15 @@ class SerialReaderApp:
             else:
                 self.port_var.set(self.ports[0])  # Set default port
         self.port_menu = tk.OptionMenu(root, self.port_var, *self.ports, command=self.start_serial)
+        self.port_menu.configure(bg="lightyellow", fg="black")  # Set background and foreground colors
         self.port_menu.pack()
 
         # Baud rate selection
         self.baudrate_var = tk.StringVar()
-        self.baudrates = [9600, 19200, 38400, 57600, 115200, 230400]
-        if self.baudrate:
-            self.baudrate_var.set(self.baudrate)  # Set default baud rate from config
-        else:
-            self.baudrate_var.set(115200)  # Set default baud rate
-        self.baudrate_menu = tk.OptionMenu(root, self.baudrate_var, *self.baudrates, command=self.start_serial)
-        self.baudrate_menu.pack()
+        self.baudrate_label = tk.Label(root, text="Baud Rate:", bg="lightgreen", fg="black")
+        self.baudrate_label.pack()
+        self.baudrate_entry = tk.Entry(root, textvariable=self.baudrate_var, bg="lightyellow", fg="black")
+        self.baudrate_entry.pack()
 
         # Start the serial port
         self.start_serial()
