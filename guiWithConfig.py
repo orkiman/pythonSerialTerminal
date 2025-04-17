@@ -17,6 +17,8 @@ class SerialReaderApp:
 
         self.cr_var = tk.IntVar()
         self.lf_var = tk.IntVar()
+        self.stx_var = tk.IntVar()
+        self.etx_var = tk.IntVar()
         self.send_checkbox_var = tk.BooleanVar()
 
         # Baud rate selection
@@ -84,6 +86,12 @@ class SerialReaderApp:
         self.lf_cb = tk.Checkbutton(root, text="LF (\\n)", variable=self.lf_var)
         self.lf_cb.pack(side="left")
 
+        # STX/ETX checkboxes
+        self.stx_cb = tk.Checkbutton(root, text="STX (\\x02)", variable=self.stx_var)
+        self.stx_cb.pack(side="left")
+        self.etx_cb = tk.Checkbutton(root, text="ETX (\\x03)", variable=self.etx_var)
+        self.etx_cb.pack(side="left")
+
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.root.after(100, self.run_asyncio)
 
@@ -150,6 +158,10 @@ class SerialReaderApp:
     def send_data(self, *args):
         data = self.input_entry.get()
         if self.protocol and data:
+            if self.stx_var.get():
+                data = '\x02' + data
+            if self.etx_var.get():
+                data = data + '\x03'
             if self.cr_var.get():
                 data += '\r'
             if self.lf_var.get():
@@ -184,7 +196,9 @@ class SerialReaderApp:
             'baudrate': self.baudrate_var.get(),
             'cr': self.cr_var.get(),
             'lf': self.lf_var.get(),
-            'keep_sent_data': self.send_checkbox_var.get()
+            'keep_sent_data': self.send_checkbox_var.get(),
+            'stx': self.stx_var.get(),
+            'etx': self.etx_var.get()
         }
         with open('config.ini', 'w') as configfile:
             config.write(configfile)
@@ -198,6 +212,8 @@ class SerialReaderApp:
         self.cr_var.set(int(config.get('DEFAULT', 'cr', fallback=0)))
         self.lf_var.set(int(config.get('DEFAULT', 'lf', fallback=0)))
         self.send_checkbox_var.set(config.getboolean('DEFAULT', 'keep_sent_data', fallback=False))
+        self.stx_var.set(int(config.get('DEFAULT', 'stx', fallback=0)))
+        self.etx_var.set(int(config.get('DEFAULT', 'etx', fallback=0)))
 
     def update_port_status(self, status, color):
         self.port_status_label.config(text=f"Port: {status}", bg=color)
